@@ -26,14 +26,22 @@ if !exists('g:sparkupNextMapping')
   let g:sparkupNextMapping = '<c-n>'
 endif
 
+if !exists('g:sparkupPrevMapping')
+  let g:sparkupPrevMapping = '<c-b>'
+endif
+
 inoremap <buffer> <Plug>SparkupExecute <c-g>u<Esc>:call <SID>Sparkup()<cr>
-inoremap <buffer> <Plug>SparkupNext    <c-g>u<Esc>:call <SID>SparkupNext()<cr>
+inoremap <buffer> <Plug>SparkupNext    <c-g>u<Esc>:call <SID>SparkupSearch('next')<cr>
+inoremap <buffer> <Plug>SparkupPrev    <c-g>u<Esc>:call <SID>SparkupSearch('prev')<cr>
 
 if ! hasmapto('<Plug>SparkupExecute', 'i')
   exec 'imap <buffer> ' . g:sparkupExecuteMapping . ' <Plug>SparkupExecute'
 endif
 if ! hasmapto('<Plug>SparkupNext', 'i')
   exec 'imap <buffer> ' . g:sparkupNextMapping . ' <Plug>SparkupNext'
+endif
+if ! hasmapto('<Plug>SparkupPrev', 'i')
+  exec 'imap <buffer> ' . g:sparkupPrevMapping . ' <Plug>SparkupPrev'
 endif
 
 if exists('*s:Sparkup')
@@ -64,16 +72,20 @@ function! s:Sparkup()
         endif
     endif
     exec '.!' . s:sparkup
-    call s:SparkupNext()
+    call s:SparkupSearch('')
 endfunction
 
-function! s:SparkupNext()
-    " search returns (2) for empty attribute, (3) for empty line
-    let n = search('><\/\|\(""\)\|\(^\s*$\)', 'Wp')
-    if n == 3
+function! s:SparkupSearch(direction)
+    let param = ''
+    if a:direction == 'prev'
+        let param .= 'b'
+    endif
+    execute 'normal l'
+    let n = search('>\zs<\/\|"\zs"\|\(^\s*\zs$\)', 'Wp' . param)
+
+    if n == 2
         startinsert!
     else
-        execute 'normal l'
         startinsert
     endif
 endfunction
